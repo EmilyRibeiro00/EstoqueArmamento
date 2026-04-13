@@ -1,0 +1,1857 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Painel - Controle de Armamento</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+    rel="stylesheet"
+  />
+
+ <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    /* variaveis globais */
+    :root {
+      --bg: #f7f7f8;
+      --panel: #ffffff;
+      --border: #e5e7eb;
+      --text: #111827;
+      --muted: #6b7280;
+      --sidebar: #ffffff;
+      --hover: #f3f4f6;
+      --success: #059669;
+      --danger: #dc2626;
+      --warning: #d97706;
+      --info: #2563eb;
+      --shadow: 0 8px 24px rgba(17, 24, 39, 0.04);
+      --radius: 16px;
+    }
+
+    body {
+      font-family: "Inter", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 250px 1fr;
+      min-height: 100vh;
+    }
+
+    /*====================================================*/
+    /* lado esquerdo da página */
+    .sidebar {
+      background: var(--sidebar);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .sidebar-header {
+      height: 72px;
+      display: flex;
+      align-items: center;
+      padding: 0 20px;
+      border-bottom: 1px solid var(--border);
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .sidebar-nav {
+      padding: 16px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: #374151;
+      padding: 12px 14px;
+      border-radius: 12px;
+      font-size: 15px;
+      font-weight: 500;
+      transition: background 0.2s ease, color 0.2s ease;
+      cursor: pointer;
+    }
+
+    .nav-item:hover {
+      background: var(--hover);
+    }
+
+    .nav-item.active {
+      background: var(--hover);
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    .nav-icon {
+      width: 18px;
+      height: 18px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: #4b5563;
+      flex-shrink: 0;
+    }
+
+    /*====================================================*/
+    /* lado direto da página */
+    .main {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    /* barra superior da main */
+    .topbar {
+      height: 72px;
+      background: var(--panel);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+    }
+
+    .topbar-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #667085;
+    }
+
+    /* informações do usuário */
+    .topbar-user {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    /* Cria um círculo fixo para exibir ícone */
+    .user-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 999px; 
+      background: #f3f4f6;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #6b7280;
+      flex-shrink: 0; /* evita que o avatar encolha no flex */
+    }
+
+    /* Organiza nome e cargo em coluna */
+    .user-info {
+      display: flex;
+      flex-direction: column;
+      line-height: 1.2; 
+    }
+
+    /* Destaque principal da identificação */
+    .user-name {
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    /* Informação secundária com menor destaque visual */
+    .user-role {
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    /* Botão de saida */
+    .logout-btn {
+      margin-left: 8px;
+      border: none;
+      background: transparent;
+      color: #6b7280;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+    }
+
+    /*====================================================*/
+    /* conteúdo principal das páginas */
+    .content {
+      padding: 28px 24px 32px;
+    }
+
+    /* controle de troca de páginas */
+    .page-section {
+      display: none;
+    }
+
+    .page-section.active {
+      display: block;
+    }
+
+    /* Padroniza espaçamento - títulos e descrições */
+    .page-header {
+      margin-bottom: 24px;
+    }
+
+    /* Padronização dos textos - títulos e descrições */
+    .page-header h1 {
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .page-header p {
+      font-size: 15px;
+      color: var(--muted);
+    }
+
+    /*====================================================*/
+    /* CARDS DO DASHBOARD */
+    /* transforma em matriz, com 1 linha e 4 colunas*/
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 26px;
+    }
+
+    /* padronização dos cards */
+    .stat-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 22px 24px;
+      min-height: 110px;
+      box-shadow: var(--shadow);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    /* Texto */
+    .stat-label {
+      font-size: 15px;
+      color: var(--muted);
+      margin-bottom: 14px;
+    }
+
+    /* Valores */
+    .stat-value {
+      font-size: 20px;
+      font-weight: 700;
+      color: #d1d5db;
+    }
+
+    /* Espaço pros icones */
+    .stat-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 999px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #c7cbd3;
+    }
+
+    /* Definição das cores*/
+    .stat-card.available .stat-icon {
+      color: #86d3b4;
+    }
+
+    .stat-card.in-use .stat-icon {
+      color: #f19999;
+    }
+
+    .stat-card.maintenance .stat-icon {
+      color: #e8b071;
+    }
+
+    /*====================================================*/
+    /* COLUNAS - ações + atividades */
+    /* transforma em matriz, com 2 colunas*/
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: 1fr 0.95fr;
+      gap: 16px;
+      align-items: start;
+    }
+
+    /* Padroniza títulos*/
+    .section-title {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+
+    /* Padroniza boxs*/
+    .actions-list,
+    .activity-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    /* CARDS DE AÇÕES*/
+    /* boxs de ações rápidas */
+    .action-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      min-height: 58px;
+      padding: 16px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between; /* separa texto e ícone */
+      box-shadow: var(--shadow);
+      cursor: pointer;
+      transition: background 0.2s ease, transform 0.2s ease;
+    }
+
+    .action-card:hover {
+      background: #fcfcfd;
+      transform: translateY(-1px);
+    }
+
+    /* Define hierarquia visual do título dentro do card */
+    .action-card span {
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    /* design do ícone da ação */
+    .action-icon {
+      color: #6b7280;
+      font-size: 22px;
+      line-height: 1;
+    }
+
+    /* CARDS DE ATIVIDADES */
+    /* container que agrupa a lista de atividades */
+    .activity-panel {
+      background: transparent;
+    }
+    
+    /* Card que representa uma atividade */
+    .activity-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+      box-shadow: var(--shadow);
+      min-height: 92px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    /* linha superior do card - (badge + título + info) */
+    .activity-top {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap; 
+    }
+
+    /* design da etiqueta de status */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 5px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 600;
+      background: #f3f4f6;
+      color: #9ca3af;
+    }
+
+    /* variações de tipo de status */
+    .badge.checkout,
+    .badge.return,
+    .badge.entry {
+      background: #f3f4f6;
+      color: #9ca3af;
+    }
+
+    /* título da atividade */
+    .activity-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: #d1d5db;
+    }
+
+
+    /* informações secundárias - (data, usuário, etc.) */
+    .activity-meta {
+      font-size: 13px;
+      color: #c0c4cc;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    /* descrição da atividade */
+    .activity-desc {
+      font-size: 14px;
+      color: #d1d5db;
+    }
+
+    /*==============================================================*/
+    /* ==== LAYOUT GENERICO - usando nas variações das páginas ==== */
+    /* Transforma o container em um empilhador vertical*/
+    .simple-page {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* Cria o bloco do card - Caixa branca com borda arredondada */
+    .simple-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 20px;
+      box-shadow: var(--shadow);
+    }
+
+    /* padronização dos textos*/
+    .simple-card h2 {
+      font-size: 18px;
+      margin-bottom: 16px;
+    }
+
+    .simple-card p {
+      font-size: 14px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    /*====================================================*/
+    /* ==== TABELAS ==== */
+    /* container da tabela - caixa onde a tabela fica */
+    .table-wrapper {
+      width: 100%;
+      overflow-x: auto;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--panel);
+    }
+
+    /* estrutura da tabela */
+    /* base */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+      min-width: 720px; 
+    }
+
+    /* cabeçalho */
+    thead {
+      background: #f9fafb;
+    }
+
+    th {
+      text-align: left;
+      padding: 12px 14px;
+      font-weight: 600;
+      color: #374151;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap; /* evita quebrar texto */
+    }
+
+    /* célula da tabela */
+    td {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border);
+      color: #4b5563;
+      vertical-align: middle;
+    }
+
+    /* efeito quando passa o mouse na linha */
+    tbody tr:hover {
+      background: #f9fafb;
+    }
+
+    /* remove a linha da última linha da tabela */
+    tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    /* STATUS da tabela de itens (reproduzivel) */
+    .badge-status {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .status-ativo,
+    .status-disponivel {
+      background: #ecfdf5;
+      color: #059669;
+    }
+
+    .status-manutencao {
+      background: #fffbeb;
+      color: #d97706;
+    }
+
+    .status-baixado,
+    .status-inativo {
+      background: #fef2f2;
+      color: #dc2626;
+    }
+
+    /*====================================================*/
+    /* CRUD - topbar da simple-page*/
+    /* barra de cima da simple-page */
+    .crud-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+
+    /* tira a margem padrão do título */
+    .crud-toolbar h2 {
+      margin-bottom: 0;
+    }
+
+    /* agrupa ações */
+    .crud-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    /* box de busca */
+    .crud-search {
+      min-width: 240px;
+      height: 40px;
+      padding: 0 14px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: #fff;
+      color: var(--text);
+      font-size: 14px;
+      outline: none;
+    }
+
+    .crud-search:focus {
+      border-color: #cbd5e1;
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.08);
+    }
+
+    /*====================================================*/
+    /* BOTÕES (geral) */
+    /* base de todos os botões */
+    .primary-btn,
+    .secondary-btn,
+    .table-btn,
+    .icon-btn {
+      border: none;
+      cursor: pointer;
+      transition: 0.2s ease;
+      font-family: inherit;
+    }
+
+    /* botão principal - adicionar e salvar (modal) */
+    .primary-btn {
+      height: 40px;
+      padding: 0 14px;
+      border-radius: 10px;
+      background: var(--info);
+      color: #fff;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .primary-btn:hover {
+      filter: brightness(0.96);
+    }
+
+    /* botão secundário - cancelar (modal) */
+    .secondary-btn {
+      height: 40px;
+      padding: 0 14px;
+      border-radius: 10px;
+      background: #f8fafc;
+      color: #334155;
+      font-size: 14px;
+      font-weight: 600;
+      border: 1px solid var(--border);
+    }
+
+    .secondary-btn:hover {
+      background: #f1f5f9;
+    }
+
+    /* BOTÕES DA TABELA */
+    /* área onde ficam os botões - define que eles ficam lado a lado */
+    .table-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      white-space: nowrap;
+    }
+
+    /* botão padrão da tabela - define visual do botão */
+    .table-btn {
+      height: 32px;
+      padding: 0 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      border: 1px solid var(--border);
+      background: #fff;
+      color: #334155;
+    }
+
+    .table-btn:hover {
+      background: #f8fafc;
+    }
+
+    /* botão editar (azul) */
+    .table-btn.edit-btn {
+      color: #1d4ed8;
+      border-color: #bfdbfe;
+      background: #eff6ff;
+    }
+
+    .table-btn.edit-btn:hover {
+      background: #dbeafe;
+    }
+
+    /* botão deletar (vermelho) */
+    .table-btn.delete-btn {
+      color: #b91c1c;
+      border-color: #fecaca;
+      background: #fef2f2;
+    }
+
+    .table-btn.delete-btn:hover {
+      background: #fee2e2;
+    }
+
+    /* ESTADO VAZIO */
+
+    /* mensagem quando não tem nada na tabela */
+    .empty-state {
+      padding: 28px 16px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    /*====================================================*/
+    /* MODAL */
+
+    /* fundo escuro atrás do modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.45);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      z-index: 1000;
+    }
+
+    /* quando o modal aparece */
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    /* caixa do modal */
+    .crud-modal {
+      width: 100%;
+      max-width: 720px;
+      background: var(--panel);
+      border-radius: 18px;
+      box-shadow: 0 20px 50px rgba(15, 23, 42, 0.16);
+      border: 1px solid var(--border);
+      overflow: hidden;
+    }
+
+    /* topo do modal */
+    .modal-header {
+      padding: 18px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    /* título do modal */
+    .modal-header h3 {
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    /* botão de fechar (ícone) */
+    .icon-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: #f8fafc;
+      color: #475569;
+      border: 1px solid var(--border);
+      font-size: 18px;
+      line-height: 1;
+    }
+
+    /* hover do botão de ícone */
+    .icon-btn:hover {
+      background: #f1f5f9;
+    }
+
+
+    /* FORMULÁRIO */
+
+    /* corpo do modal */
+    .modal-body {
+      padding: 20px;
+    }
+
+    /* layout do form (2 colunas) */
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    /* grupo de campo */
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    /* campo ocupando tudo */
+    .form-group.full-width {
+      grid-column: 1 / -1;
+    }
+
+    /* label */
+    .form-group label {
+      font-size: 13px;
+      font-weight: 600;
+      color: #334155;
+    }
+
+    /* inputs padrão */
+    .form-input,
+    .form-select,
+    .form-textarea {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: #fff;
+      color: var(--text);
+      font-size: 14px;
+      font-family: inherit;
+      outline: none;
+    }
+
+    /* tamanho padrão */
+    .form-input,
+    .form-select {
+      height: 40px;
+      padding: 0 12px;
+    }
+
+    /* textarea maior */
+    .form-textarea {
+      min-height: 96px;
+      padding: 12px;
+      resize: vertical;
+    }
+
+    /* foco */
+    .form-input:focus,
+    .form-select:focus,
+    .form-textarea:focus {
+      border-color: #cbd5e1;
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.08);
+    }
+
+
+    /* RODAPÉ DO MODAL */
+
+    /* área dos botões */
+    .modal-footer {
+      padding: 18px 20px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    /* caixinha de confirmação */
+    .confirm-box {
+      max-width: 460px;
+    }
+
+    /* texto da confirmação */
+    .confirm-box .modal-body p {
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    /*====================================================*/
+    /* responsividade - adaptar layout a diferentes telas */
+    @media (max-width: 1200px) {
+      .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .dashboard-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 820px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        display: none;
+      }
+
+      .topbar {
+        padding: 0 16px;
+      }
+
+      .content {
+        padding: 22px 16px 28px;
+      }
+
+      .stats-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .topbar-title {
+        display: none;
+      }
+
+      .crud-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .crud-actions {
+        width: 100%;
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .crud-search {
+        min-width: 100%;
+      }
+
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .modal-footer {
+        flex-direction: column-reverse;
+      }
+
+      .modal-footer .primary-btn,
+      .modal-footer .secondary-btn {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="layout">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">Controle de Armamento</div>
+
+      <nav class="sidebar-nav">
+        <a href="#" class="nav-item active" data-page="painel">
+          <span class="nav-icon">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8">
+              <rect x="3" y="3" width="7" height="7" rx="1"></rect>
+              <rect x="14" y="3" width="7" height="7" rx="1"></rect>
+              <rect x="3" y="14" width="7" height="7" rx="1"></rect>
+              <rect x="14" y="14" width="7" height="7" rx="1"></rect>
+            </svg>
+          </span>
+          Painel
+        </a>
+
+        <a href="#" class="nav-item" data-page="movimentacoes">
+          <span class="nav-icon">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8">
+              <path d="M17 3l4 4-4 4"></path>
+              <path d="M3 7h18"></path>
+              <path d="M7 21l-4-4 4-4"></path>
+              <path d="M21 17H3"></path>
+            </svg>
+          </span>
+          Movimentações
+        </a>
+
+        <a href="#" class="nav-item" data-page="itens">
+          <span class="nav-icon">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8">
+              <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+              <path d="M3.3 7l8.7 5 8.7-5"></path>
+              <path d="M12 22V12"></path>
+            </svg>
+          </span>
+          Itens
+        </a>
+
+        <a href="#" class="nav-item" data-page="agentes">
+          <span class="nav-icon">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8">
+              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+              <circle cx="9" cy="7" r="4"></circle>
+              <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+            </svg>
+          </span>
+          Agentes
+        </a>
+
+        <a href="#" class="nav-item" data-page="modelos">
+          <span class="nav-icon">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8">
+              <path d="M12 2l9 4.9-9 4.9-9-4.9L12 2z"></path>
+              <path d="M3 12l9 5 9-5"></path>
+              <path d="M3 17l9 5 9-5"></path>
+            </svg>
+          </span>
+          Modelos
+        </a>
+
+        <a href="#" class="nav-item" data-page="fabricantes">
+          <span class="nav-icon">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8">
+              <path d="M6 22V6a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v16"></path>
+              <path d="M6 12H4"></path>
+              <path d="M6 17H4"></path>
+              <path d="M20 12h-2"></path>
+              <path d="M20 17h-2"></path>
+              <path d="M10 6h4"></path>
+              <path d="M10 10h4"></path>
+            </svg>
+          </span>
+          Fabricantes
+        </a>
+
+        <a href="#" class="nav-item" data-page="tipos">
+          <span class="nav-icon">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8">
+              <path d="M20.59 13.41L12 22l-8.59-8.59A2 2 0 0 1 3 12V4a2 2 0 0 1 2-2h8a2 2 0 0 1 1.41.59l6 6A2 2 0 0 1 21 10v2a2 2 0 0 1-.41 1.41z"></path>
+              <circle cx="7.5" cy="7.5" r="1.5"></circle>
+            </svg>
+          </span>
+          Tipos
+        </a>
+
+        <a href="#" class="nav-item" data-page="unidades">
+          <span class="nav-icon">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+            </svg>
+          </span>
+          Unidades
+        </a>
+
+        <a href="#" class="nav-item" data-page="operadores">
+          <span class="nav-icon">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8">
+              <circle cx="8" cy="8" r="3"></circle>
+              <circle cx="17" cy="15" r="3"></circle>
+              <path d="M10.5 10.5l4 2"></path>
+              <path d="M3 21v-1a4 4 0 0 1 4-4h2"></path>
+              <path d="M14 21v-1a4 4 0 0 1 4-4h3"></path>
+            </svg>
+          </span>
+          Operadores do Sistema
+        </a>
+      </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="main">
+
+      <!-- Topbar -->
+      <header class="topbar">
+        <div class="topbar-title">Sistema de Controle de Inventário</div>
+
+        <div class="topbar-user">
+          <div class="user-avatar">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8">
+              <path d="M20 21a8 8 0 0 0-16 0"></path>
+              <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+          </div>
+
+          <div class="user-info">
+            <span class="user-name">Usuário Admin</span>
+            <span class="user-role">Administrador</span>
+          </div>
+
+          <button class="logout-btn">Sair</button>
+        </div>
+      </header>
+
+      <!-- Content Area -->
+      <main class="content">
+
+        <section id="painel" class="page-section active">
+          <div class="page-header">
+            <h1>Painel</h1>
+            <p>Visão geral do sistema e ações rápidas</p>
+          </div>
+
+          <!-- Painel de Estatísticas -->
+          <section class="stats-grid">
+            <div class="stat-card">
+              <div>
+                <div class="stat-label">Total de Itens</div>
+                <div class="stat-value">--</div>
+              </div>
+              <div class="stat-icon">
+                <svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="currentColor" stroke-width="1.8">
+                  <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                  <path d="M3.3 7l8.7 5 8.7-5"></path>
+                  <path d="M12 22V12"></path>
+                </svg>
+              </div>
+            </div>
+
+            <div class="stat-card available">
+              <div>
+                <div class="stat-label">Disponíveis</div>
+                <div class="stat-value">--</div>
+              </div>
+              <div class="stat-icon">
+                <svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="currentColor" stroke-width="1.8">
+                  <circle cx="12" cy="12" r="9"></circle>
+                  <path d="M8.5 12.5l2.5 2.5 5-6"></path>
+                </svg>
+              </div>
+            </div>
+
+            <div class="stat-card in-use">
+              <div>
+                <div class="stat-label">Em Uso</div>
+                <div class="stat-value">--</div>
+              </div>
+              <div class="stat-icon">
+                <svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="currentColor" stroke-width="1.8">
+                  <circle cx="12" cy="12" r="9"></circle>
+                  <path d="M9 9l6 6"></path>
+                  <path d="M15 9l-6 6"></path>
+                </svg>
+              </div>
+            </div>
+
+            <div class="stat-card maintenance">
+              <div>
+                <div class="stat-label">Manutenção</div>
+                <div class="stat-value">--</div>
+              </div>
+              <div class="stat-icon">
+                <svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="currentColor" stroke-width="1.8">
+                  <path d="M14.7 6.3a4 4 0 0 0 3 5.9l-8.4 8.4a2.1 2.1 0 1 1-3-3l8.4-8.4a4 4 0 0 0 5.9-3"></path>
+                </svg>
+              </div>
+            </div>
+          </section>
+
+          <!-- Ações Rápidas e Atividade Recente -->
+          <section class="dashboard-grid">
+            <div>
+              <h2 class="section-title">Ações Rápidas</h2>
+
+              <div class="actions-list">
+                <button class="action-card" type="button">
+                  <span>Novo Empréstimo</span>
+                  <span class="action-icon">→</span>
+                </button>
+
+                <button class="action-card" type="button">
+                  <span>Nova Devolução</span>
+                  <span class="action-icon">→</span>
+                </button>
+
+                <button class="action-card" type="button">
+                  <span>Adicionar Item</span>
+                  <span class="action-icon">+</span>
+                </button>
+
+                <button class="action-card" type="button">
+                  <span>Adicionar Agente</span>
+                  <span class="action-icon">+</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="activity-panel">
+              <h2 class="section-title">Atividade Recente</h2>
+
+              <div class="activity-list" id="activityList">
+              </div>
+            </div>
+          </section>
+        </section>
+
+        <!-- DOM -->
+        <section id="movimentacoes" class="page-section">
+          <div class="simple-page">
+            <div class="page-header">
+              <h1>Movimentações</h1>
+              <p>Gerencie entradas, saídas, empréstimos e devoluções</p>
+            </div>
+
+            <div class="simple-card">
+              <div class="crud-toolbar">
+                <h2>Lista de Movimentações</h2>
+
+                <div class="crud-actions">
+                  <input class="crud-search" type="text" placeholder="Buscar movimentação..." />
+                  <button class="primary-btn" type="button" data-open-modal="movimentacaoModal">Nova Movimentação</button>
+                </div>
+              </div>
+
+              <div class="table-wrapper">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Data/Hora</th>
+                      <th>Tipo</th>
+                      <th>Observação</th>
+                      <th>Item</th>
+                      <th>Agente</th>
+                      <th>Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody id="movimentacoesTableBody">
+                    <tr>
+                      <td>--</td>
+                      <td>--</td>
+                      <td>--</td>
+                      <td>--</td>
+                      <td>--</td>
+                      <td>--</td>
+                      <td>
+                        <div class="table-actions">
+                          <button class="table-btn edit-btn" type="button" data-open-modal="movimentacaoModal">Editar</button>
+                          <button class="table-btn delete-btn" type="button" data-open-modal="deleteConfirmModal">Remover</button>
+                        </div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="itens" class="page-section">
+          <div class="simple-page">
+            <div class="page-header">
+              <h1>Itens</h1>
+              <p>Visualize e gerencie os itens cadastrados no sistema</p>
+            </div>
+
+            <div class="simple-card">
+              <div class="crud-toolbar">
+                <h2>Lista de Itens</h2>
+
+                <div class="crud-actions">
+                  <input class="crud-search" type="text" placeholder="Buscar item..." />
+                  <button class="primary-btn" type="button" data-open-modal="itemModal">Novo Item</button>
+                </div>
+              </div>
+
+              <div class="table-wrapper">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Número de Série</th>
+                      <th>Status</th>
+                      <th>Modelo</th>
+                      <th>Agente Atual</th>
+                      <th>Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody id="itensTableBody">
+                    <tr>
+                      <td>--</td>
+                      <td>--</td>
+                      <td><span class="badge-status status-disponivel">Disponível</span></td>
+                      <td>--</td>
+                      <td>--</td>
+                      <td>
+                        <div class="table-actions">
+                          <button class="table-btn edit-btn" type="button" data-open-modal="itemModal">Editar</button>
+                          <button class="table-btn delete-btn" type="button" data-open-modal="deleteConfirmModal">Remover</button>
+                        </div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="agentes" class="page-section">
+          <div class="simple-page">
+            <div class="page-header">
+              <h1>Agentes</h1>
+              <p>Gerencie os agentes vinculados ao sistema</p>
+            </div>
+
+            <div class="simple-card">
+              <div class="crud-toolbar">
+                <h2>Lista de Agentes</h2>
+
+                <div class="crud-actions">
+                  <input class="crud-search" type="text" placeholder="Buscar agente..." />
+                  <button class="primary-btn" type="button" data-open-modal="agenteModal">Novo Agente</button>
+                </div>
+              </div>
+
+              <div class="table-wrapper">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Nome</th>
+                      <th>Matrícula</th>
+                      <th>Cargo</th>
+                      <th>Unidade</th>
+                      <th>Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody id="agentesTableBody">
+                    <tr>
+                      <td>--</td>
+                      <td>--</td>
+                      <td>--</td>
+                      <td>--</td>
+                      <td>--</td>
+                      <td>
+                        <div class="table-actions">
+                          <button class="table-btn edit-btn" type="button" data-open-modal="agenteModal">Editar</button>
+                          <button class="table-btn delete-btn" type="button" data-open-modal="deleteConfirmModal">Remover</button>
+                        </div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="modelos" class="page-section">
+          <div class="simple-page">
+            <div class="page-header">
+              <h1>Modelos</h1>
+              <p>Gerencie os modelos disponíveis no sistema</p>
+            </div>
+
+            <div class="simple-card">
+              <div class="crud-toolbar">
+                <h2>Lista de Modelos</h2>
+
+                <div class="crud-actions">
+                  <input class="crud-search" type="text" placeholder="Buscar modelo..." />
+                  <button class="primary-btn" type="button" data-open-modal="modeloModal">Novo Modelo</button>
+                </div>
+              </div>
+
+              <div class="table-wrapper">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Nome do Modelo</th>
+                      <th>Calibre</th>
+                      <th>Tipo</th>
+                      <th>Fabricante</th>
+                      <th>Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody id="modelosTableBody">
+                    <tr>
+                      <td>--</td>
+                      <td>--</td>
+                      <td>--</td>
+                      <td>--</td>
+                      <td>--</td>
+                      <td>
+                        <div class="table-actions">
+                          <button class="table-btn edit-btn" type="button" data-open-modal="modeloModal">Editar</button>
+                          <button class="table-btn delete-btn" type="button" data-open-modal="deleteConfirmModal">Remover</button>
+                        </div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="fabricantes" class="page-section">
+          <div class="simple-page">
+            <div class="page-header">
+              <h1>Fabricantes</h1>
+              <p>Gerencie os fabricantes cadastrados</p>
+            </div>
+
+            <div class="simple-card">
+              <div class="crud-toolbar">
+                <h2>Lista de Fabricantes</h2>
+
+                <div class="crud-actions">
+                  <input class="crud-search" type="text" placeholder="Buscar fabricante..." />
+                  <button class="primary-btn" type="button" data-open-modal="fabricanteModal">Novo Fabricante</button>
+                </div>
+              </div>
+
+              <div class="table-wrapper">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Nome do Fabricante</th>
+                      <th>CNPJ</th>
+                      <th>Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody id="fabricantesTableBody">
+                    <tr>
+                      <td>--</td>
+                      <td>--</td>
+                      <td>--</td>
+                      <td>
+                        <div class="table-actions">
+                          <button class="table-btn edit-btn" type="button" data-open-modal="fabricanteModal">Editar</button>
+                          <button class="table-btn delete-btn" type="button" data-open-modal="deleteConfirmModal">Remover</button>
+                        </div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="tipos" class="page-section">
+          <div class="simple-page">
+            <div class="page-header">
+              <h1>Tipos</h1>
+              <p>Gerencie os tipos cadastrados no sistema</p>
+            </div>
+
+            <div class="simple-card">
+              <div class="crud-toolbar">
+                <h2>Lista de Tipos</h2>
+
+                <div class="crud-actions">
+                  <input class="crud-search" type="text" placeholder="Buscar tipo..." />
+                  <button class="primary-btn" type="button" data-open-modal="tipoModal">Novo Tipo</button>
+                </div>
+              </div>
+
+              <div class="table-wrapper">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Nome do Tipo</th>
+                      <th>Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tiposTableBody">
+                    <tr>
+                      <td>--</td>
+                      <td>--</td>
+                      <td>
+                        <div class="table-actions">
+                          <button class="table-btn edit-btn" type="button" data-open-modal="tipoModal">Editar</button>
+                          <button class="table-btn delete-btn" type="button" data-open-modal="deleteConfirmModal">Remover</button>
+                        </div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="unidades" class="page-section">
+          <div class="simple-page">
+            <div class="page-header">
+              <h1>Unidades</h1>
+              <p>Gerencie as unidades vinculadas ao sistema</p>
+            </div>
+
+            <div class="simple-card">
+              <div class="crud-toolbar">
+                <h2>Lista de Unidades</h2>
+
+                <div class="crud-actions">
+                  <input class="crud-search" type="text" placeholder="Buscar unidade..." />
+                  <button class="primary-btn" type="button" data-open-modal="unidadeModal">Nova Unidade</button>
+                </div>
+              </div>
+
+              <div class="table-wrapper">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Nome da Unidade</th>
+                      <th>Sigla</th>
+                      <th>CEP</th>
+                      <th>Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody id="unidadesTableBody">
+                    <tr>
+                      <td>--</td>
+                      <td>--</td>
+                      <td>--</td>
+                      <td>--</td>
+                      <td>
+                        <div class="table-actions">
+                          <button class="table-btn edit-btn" type="button" data-open-modal="unidadeModal">Editar</button>
+                          <button class="table-btn delete-btn" type="button" data-open-modal="deleteConfirmModal">Remover</button>
+                        </div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="operadores" class="page-section">
+          <div class="simple-page">
+            <div class="page-header">
+              <h1>Operadores do Sistema</h1>
+              <p>Gerencie os usuários operadores do sistema</p>
+            </div>
+
+            <div class="simple-card">
+              <div class="crud-toolbar">
+                <h2>Lista de Operadores</h2>
+
+                <div class="crud-actions">
+                  <input class="crud-search" type="text" placeholder="Buscar operador..." />
+                  <button class="primary-btn" type="button" data-open-modal="operadorModal">Novo Operador</button>
+                </div>
+              </div>
+
+              <div class="table-wrapper">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Nome</th>
+                      <th>Matrícula</th>
+                      <th>Senha Hash</th>
+                      <th>Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody id="operadoresTableBody">
+                    <tr>
+                      <td>--</td>
+                      <td>--</td>
+                      <td>--</td>
+                      <td>--</td>
+                      <td>
+                        <div class="table-actions">
+                          <button class="table-btn edit-btn" type="button" data-open-modal="operadorModal">Editar</button>
+                          <button class="table-btn delete-btn" type="button" data-open-modal="deleteConfirmModal">Remover</button>
+                        </div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <!-- Modais CRUD -->
+  <div class="modal-overlay" id="itemModal">
+    <div class="crud-modal">
+      <div class="modal-header">
+        <h3>Item</h3>
+        <button class="icon-btn" type="button" data-close-modal>&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <form>
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="itemNumeroSerie">Número de Série</label>
+              <input class="form-input" id="itemNumeroSerie" type="text" placeholder="Digite o número de série" />
+            </div>
+
+            <div class="form-group">
+              <label for="itemStatus">Status</label>
+              <select class="form-select" id="itemStatus">
+                <option>Disponível</option>
+                <option>Em uso</option>
+                <option>Manutenção</option>
+                <option>Baixado</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="itemModelo">Modelo</label>
+              <select class="form-select" id="itemModelo">
+                <option>Selecione</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="itemAgente">Agente Atual</label>
+              <select class="form-select" id="itemAgente">
+                <option>Selecione</option>
+              </select>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <div class="modal-footer">
+        <button class="secondary-btn" type="button" data-close-modal>Cancelar</button>
+        <button class="primary-btn" type="button">Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="agenteModal">
+    <div class="crud-modal">
+      <div class="modal-header">
+        <h3>Agente</h3>
+        <button class="icon-btn" type="button" data-close-modal>&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <form>
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="agenteNome">Nome</label>
+              <input class="form-input" id="agenteNome" type="text" placeholder="Digite o nome" />
+            </div>
+
+            <div class="form-group">
+              <label for="agenteMatricula">Matrícula</label>
+              <input class="form-input" id="agenteMatricula" type="text" placeholder="Digite a matrícula" />
+            </div>
+
+            <div class="form-group">
+              <label for="agenteCargo">Cargo</label>
+              <input class="form-input" id="agenteCargo" type="text" placeholder="Digite o cargo" />
+            </div>
+
+            <div class="form-group">
+              <label for="agenteUnidade">Unidade</label>
+              <select class="form-select" id="agenteUnidade">
+                <option>Selecione</option>
+              </select>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <div class="modal-footer">
+        <button class="secondary-btn" type="button" data-close-modal>Cancelar</button>
+        <button class="primary-btn" type="button">Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modeloModal">
+    <div class="crud-modal">
+      <div class="modal-header">
+        <h3>Modelo</h3>
+        <button class="icon-btn" type="button" data-close-modal>&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <form>
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="modeloNome">Nome do Modelo</label>
+              <input class="form-input" id="modeloNome" type="text" placeholder="Digite o nome do modelo" />
+            </div>
+
+            <div class="form-group">
+              <label for="modeloCalibre">Calibre</label>
+              <input class="form-input" id="modeloCalibre" type="text" placeholder="Digite o calibre" />
+            </div>
+
+            <div class="form-group">
+              <label for="modeloTipo">Tipo</label>
+              <select class="form-select" id="modeloTipo">
+                <option>Selecione</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="modeloFabricante">Fabricante</label>
+              <select class="form-select" id="modeloFabricante">
+                <option>Selecione</option>
+              </select>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <div class="modal-footer">
+        <button class="secondary-btn" type="button" data-close-modal>Cancelar</button>
+        <button class="primary-btn" type="button">Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="fabricanteModal">
+    <div class="crud-modal">
+      <div class="modal-header">
+        <h3>Fabricante</h3>
+        <button class="icon-btn" type="button" data-close-modal>&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <form>
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="fabricanteNome">Nome do Fabricante</label>
+              <input class="form-input" id="fabricanteNome" type="text" placeholder="Digite o nome do fabricante" />
+            </div>
+
+            <div class="form-group">
+              <label for="fabricanteCnpj">CNPJ</label>
+              <input class="form-input" id="fabricanteCnpj" type="text" placeholder="Digite o CNPJ" />
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <div class="modal-footer">
+        <button class="secondary-btn" type="button" data-close-modal>Cancelar</button>
+        <button class="primary-btn" type="button">Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="tipoModal">
+    <div class="crud-modal">
+      <div class="modal-header">
+        <h3>Tipo</h3>
+        <button class="icon-btn" type="button" data-close-modal>&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <form>
+          <div class="form-grid">
+            <div class="form-group full-width">
+              <label for="tipoNome">Nome do Tipo</label>
+              <input class="form-input" id="tipoNome" type="text" placeholder="Digite o tipo" />
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <div class="modal-footer">
+        <button class="secondary-btn" type="button" data-close-modal>Cancelar</button>
+        <button class="primary-btn" type="button">Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="unidadeModal">
+    <div class="crud-modal">
+      <div class="modal-header">
+        <h3>Unidade</h3>
+        <button class="icon-btn" type="button" data-close-modal>&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <form>
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="unidadeNome">Nome da Unidade</label>
+              <input class="form-input" id="unidadeNome" type="text" placeholder="Digite o nome da unidade" />
+            </div>
+
+            <div class="form-group">
+              <label for="unidadeSigla">Sigla</label>
+              <input class="form-input" id="unidadeSigla" type="text" placeholder="Digite a sigla" />
+            </div>
+
+            <div class="form-group full-width">
+              <label for="unidadeCep">CEP</label>
+              <input class="form-input" id="unidadeCep" type="text" placeholder="Digite o CEP" />
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <div class="modal-footer">
+        <button class="secondary-btn" type="button" data-close-modal>Cancelar</button>
+        <button class="primary-btn" type="button">Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="operadorModal">
+    <div class="crud-modal">
+      <div class="modal-header">
+        <h3>Operador do Sistema</h3>
+        <button class="icon-btn" type="button" data-close-modal>&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <form>
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="operadorNome">Nome</label>
+              <input class="form-input" id="operadorNome" type="text" placeholder="Digite o nome" />
+            </div>
+
+            <div class="form-group">
+              <label for="operadorMatricula">Matrícula</label>
+              <input class="form-input" id="operadorMatricula" type="text" placeholder="Digite a matrícula" />
+            </div>
+
+            <div class="form-group full-width">
+              <label for="operadorSenha">Senha Hash</label>
+              <input class="form-input" id="operadorSenha" type="text" placeholder="Digite a senha hash" />
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <div class="modal-footer">
+        <button class="secondary-btn" type="button" data-close-modal>Cancelar</button>
+        <button class="primary-btn" type="button">Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="movimentacaoModal">
+    <div class="crud-modal">
+      <div class="modal-header">
+        <h3>Movimentação</h3>
+        <button class="icon-btn" type="button" data-close-modal>&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <form>
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="movimentacaoDataHora">Data/Hora</label>
+              <input class="form-input" id="movimentacaoDataHora" type="datetime-local" />
+            </div>
+
+            <div class="form-group">
+              <label for="movimentacaoTipo">Tipo</label>
+              <select class="form-select" id="movimentacaoTipo">
+                <option>Retirada</option>
+                <option>Devolução</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="movimentacaoItem">Item</label>
+              <select class="form-select" id="movimentacaoItem">
+                <option>Selecione</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="movimentacaoAgente">Agente</label>
+              <select class="form-select" id="movimentacaoAgente">
+                <option>Selecione</option>
+              </select>
+            </div>
+
+            <div class="form-group full-width">
+              <label for="movimentacaoObservacao">Observação</label>
+              <textarea class="form-textarea" id="movimentacaoObservacao" placeholder="Digite a observação"></textarea>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <div class="modal-footer">
+        <button class="secondary-btn" type="button" data-close-modal>Cancelar</button>
+        <button class="primary-btn" type="button">Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="deleteConfirmModal">
+    <div class="crud-modal confirm-box">
+      <div class="modal-header">
+        <h3>Confirmar remoção</h3>
+        <button class="icon-btn" type="button" data-close-modal>&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <p>Tem certeza que deseja remover este registro? Essa ação pode ser irreversível.</p>
+      </div>
+
+      <div class="modal-footer">
+        <button class="secondary-btn" type="button" data-close-modal>Cancelar</button>
+        <button class="table-btn delete-btn" type="button">Remover</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="teste.js"></script>
+</body>
+</html>
